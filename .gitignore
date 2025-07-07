@@ -9,3 +9,8 @@ _C.*
 outputs/*
 checkpoints/*.pt
 demo/backend/checkpoints/*.pt
+points.json
+points/
+checkpoints/
+test_output/
+.env

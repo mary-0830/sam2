@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标注点界面</title>
+    <style>
+        img {
+            max-width: 100%;
+            height: auto;
+            cursor: crosshair;
+        }
+        #image {
+            display: block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>标注点界面</h1>
+    <h2>选择图片</h2>
+    <form id="upload-form" method="post" enctype="multipart/form-data" action="/upload">
+        <input type="file" name="file" accept="image/*">
+        <button type="submit">上传图片</button>
+    </form>
+    <h3>或选择示例图片:</h3>
+    <ul>
+        {% for image in example_images %}
+        <li><a href="#" onclick="loadExampleImage('{{ image }}')">{{ image }}</a></li>
+        {% endfor %}
+    </ul>
+    <img id="image" src="" alt="加载图片失败">
+    <script>
+        const imageElement = document.getElementById('image');
+        let currentImageName = '';
+
+        // 上传图片后加载
+        document.getElementById('upload-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image_path) {
+                    imageElement.src = data.image_path;
+                    currentImageName = data.image_path.split('/').pop(); // 更新图片名称
+                } else {
+                    alert('图片上传失败');
+                }
+            });
+        });
+
+        // 加载图片时记录图片名称
+        function loadExampleImage(imageName) {
+            currentImageName = imageName;
+            fetch(`/get_image/${imageName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image_path) {
+                        imageElement.src = data.image_path;
+                    } else {
+                        alert('加载示例图片失败');
+                    }
+                });
+        }
+
+        // 点击图片添加点
+        imageElement.addEventListener('click', (event) => {
+            const rect = imageElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            if (!currentImageName) {
+                alert('请先选择一张图片');
+                return;
+            }
+
+            fetch('/add_point', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    x: Math.round(x),
+                    y: Math.round(y),
+                    username: 'user1', // 替换为实际用户名
+                    image_name: currentImageName
+                })
+            }).then(response => response.json())
+              .then(data => console.log('当前点:', data.points));
+        });
+    </script>
+</body>
+</html>
