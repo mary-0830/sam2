@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
+import re
 import warnings
 from threading import Thread
 
@@ -210,6 +211,11 @@ def load_video_frames(
         )
 
 
+def natural_sort_key(s):
+    """用于自然排序的键函数，将字符串中的数字部分按数值排序"""
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
+
+
 def load_video_frames_from_jpg_images(
     video_path,
     image_size,
@@ -243,9 +249,9 @@ def load_video_frames_from_jpg_images(
     frame_names = [
         p
         for p in os.listdir(jpg_folder)
-        if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]
+        if os.path.splitext(p)[-1].lower() in [".jpg", ".jpeg", ".png", ".bmp"]
     ]
-    frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
+    frame_names.sort(key=natural_sort_key)  # 使用自然排序
     num_frames = len(frame_names)
     if num_frames == 0:
         raise RuntimeError(f"no images found in {jpg_folder}")
